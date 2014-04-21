@@ -1,0 +1,410 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252">
+<script type="text/javascript">
+<!--
+var page_name = "";
+var protocol = window.location.protocol;
+
+// Get query string following the question mark
+var qs = location.href.substring(location.href.indexOf("?")+1);
+
+// Split parameters into an array of name=value pairs, assuming pairs are separated by ampersands
+var params = qs.split("&");
+
+// looking for page_name parameter value
+for (i=0;i<params.length;i++){
+  pos = params[i].indexOf("=");
+  if (pos == -1){ continue }
+  if( params[i].substring(0,pos) == "page_name" ) {
+    page_name = (params[i].substring(pos+1)).toLowerCase();
+    break;
+  }
+}
+
+if( page_name == "content" ) {
+var mt_tags_all = new Array;
+var landing_page_url = ""; 
+var search_page_url = "";   
+
+// Looking for url and ref parameter values
+for (i=0;i<params.length;i++){
+  var pos = params[i].indexOf("=");
+  if (pos == -1){
+    continue;
+  }
+  if( params[i].substring(0,pos).toLowerCase() == "url" ) {
+    landing_page_url = unescape(params[i].substring(pos+1));
+  }
+  if( params[i].substring(0,pos).toLowerCase() == "ref" ) {
+    search_page_url = unescape(params[i].substring(pos+1));
+  }
+}
+
+function ns_filter(d_filter, ns_search_sites){
+// Filters for natural search landings; Returns true for natural search events
+  var d_filter_u = d_filter.replace(/\./g, "\\.");
+  if ((!d_filter_paid)||(search_page_url.search(new RegExp(":\\/\\/[^\\/\\?]*"+d_filter_u,"i"))==-1)){
+    var regex_str = ":\\/\\/[^\\/\\?]*(";
+    for (var i=0;i<ns_search_sites.length;i++){
+      var ns_search_site_u = ns_search_sites[i].replace(/\./g, "\\.");	    
+      regex_str = regex_str + ns_search_site_u + "|";	  
+    }
+    var regex_str_2 = regex_str.substring(0, regex_str.length-1) + ")";
+    myregexp = new RegExp(regex_str_2, "i");
+    if (search_page_url.search(myregexp)!=-1){
+      return true;
+    }
+    else
+      return false;
+  }
+  else
+    return false;
+}
+
+function ns_tracking(){
+// Calls a natural search tracking tag
+  var mpt = new Date();
+  var mpts = mpt.getTimezoneOffset() + mpt.getTime();
+  var ns_tag = "<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/lt/17755-123414-14746-0?mpt=" + mpts + "&mpcl=" + escape(landing_page_url) + "&mpvl=" + escape(search_page_url) + "\" border=\"0\">";
+  mt_tags_all.push(ns_tag);	
+}	
+
+function ns_landing(d_filter, ns_search_sites){
+// Determines what to do for a natural search landing; Returns true on natural search landings	
+  if ((search_page_url != "")&&(ns_filter(d_filter, ns_search_sites))){
+    ns_tracking(); 
+    return true;
+  }
+  else
+    return false;
+}
+
+function paid_filter(p_filter){
+// Filters for paid landings; Returns the media channel of the original paid advertisement	
+  if ((landing_page_url.search(new RegExp(p_filter[0][0]+"=([^\\"+p_filter[0][1]+"]*)","i"))!= -1)){	
+    var p_val = RegExp.$1;
+    for (var i=1;i<p_filter.length;i++){
+      if (p_val.search(new RegExp(p_filter[i][1],"ig"))!= -1){
+        return(p_filter[i][0]);
+      }	  
+    }
+    return false;
+  }
+  else
+    return false;
+}
+
+function paid_landing(p_filter){
+// Determines what to do on paid landings. Returns true on paid landings
+  if (paid_filter(p_filter) == "search"){
+    return true;
+  }
+  if (paid_filter(p_filter) == "display"){
+    return true;
+  }
+  if (paid_filter(p_filter) == "email"){
+    return true;
+  }
+  else
+    return false;
+}
+
+// Domain Filter Configuration
+// Enter information in the section below if filtering paid events from the referring URL domain
+// Click-Thru Wrap must be enabled in MOJO for all paid placements
+var d_filter_paid = false; // enter true to enable domain filtering for paid landings
+var d_filter = "mediaplex.com"; // enter URL domain for filtering out paid landings via Click-Thru Wrap (supports regular expression matching)
+
+// Parameter Filter Configuration
+// Enter information in the section below if filtering paid events from a landing page parameter
+// Otherwise Click-Thru Wrap must be enabled in MOJO for all paid placements
+var p_filter_paid = true; // enter true to enable parameter filtering or false for domain filtering only
+var p_filter = new Array; 
+p_filter[0] = new Array("mpch", "&"); // enter landing page parameter for filtering paid events and delimiter
+p_filter[1] = new Array("search", "sem"); // enter paid channel and corresponding parameter value (supports regular expression matching)
+p_filter[2] = new Array("display", "ads"); // enter paid channel and corresponding parameter value (supports regular expression matching)
+p_filter[3] = new Array("email", "email"); // enter paid channel and corresponding parameter value (supports regular expression matching)
+
+// Natural Search Tracking Configuration
+var track_ns = true; // enter true to enable natural search tracking
+// Enter all search engine domains below for filtering natural search events
+// Each domain must be configured for natural search tracking in MOJO Adserver
+var ns_search_sites = new Array("yahoo.com","google","msn","bing","live.com","aol.com","teoma","hotbot.com","altavista.com","overture","wisenut","netscape","freeserve","web.de","bluewin.ch",
+"search.ch","toile.qc.ca","alltheweb.com","looksmart.com","ask.com","ask.co.uk","lycos.co.uk","lycos.com","freenet.de","shopping.freenet.de","t-online.de",
+"shopping1.t-online.de","webkatalog.lycos.de","lycos.at","lycos.de","aol.de","aol.co.uk","tw.imagesearch.yahoo.com","images.aol.fr","lycos.fr","lycos.ca",
+"advalvas.be","au.altavista.com","yellowpages.com.au","yatv.com","wps.yam.com","dir.yam.com",".ya.com","wanadoo.es","voila.fr","virgilio.it","terra.es","tiscali.fr",
+"tiscali.it","libero.it","goeureka.com.au","bigpond.com","ww2.austronaut.at","www.pchome.com.tw","austronaut.at","dir.pchome.com.tw","ilse.nl","aon.at","free.fr",
+"www.toile.com","news.baidu.com","baidu.com","seek.3721.com","page.zhongsou.com","cha.iask.com","search.sina.com.cn","www.sogou.com/dir/","so.sohu.com",
+"nisearch.163.com","psearch.163.com","search.tom.com","sitesearch.tom.com","cn.websearch.yahoo.com","go.8848.com","sogou.com","yisou.com","cari.com.my","yehey.com",
+"startpagina.nl",".pagina.nl","vinden.nl","lycos.nl","vindex.nl","zoeken.nl","ixquick.com","zoek.nl",".naver.com",".alexa.com","optonline.net",
+"yahoo.com.jp","orange.co.uk","tw.search.yahoo.com");
+
+// Begin landing page filtering and tracking
+if ((track_ns)&&!((p_filter_paid)&&(paid_landing(p_filter)))){
+   ns_landing(d_filter, ns_search_sites);
+}
+
+
+
+
+
+
+
+// Combine all tracking tags into one string
+var mt_tags_str = mt_tags_all.join("\n");
+
+// Replace all parameter macros in the tracking tags string
+for (i=0;i<params.length;i++){
+  pos = params[i].indexOf("=");
+  if (pos == -1){
+    continue;
+  }
+  var name = params[i].substring(0,pos);
+  var value = params[i].substring(pos+1);
+  
+  // Create a regular expression to match all instances of the paramater macro and replace with values from the query string
+  var regex_str = "<" + name + "\\/>";
+  myregexp = new RegExp(regex_str, "gi");
+  
+  mt_tags_str = mt_tags_str.replace(myregexp, value);
+}
+
+
+}
+    
+if ( page_name == "wwf_rt" || page_name == "dont_use_wwf_donationpages" || page_name == "wwf_donationlp_secure" || page_name == "wwf_panda.org_secure" || page_name == "wwf_homepagemct" || page_name == "wwf_homepagemct_secure" || page_name == "wwf_youtube_page" || page_name == "wwf_onetimelp_secure" || page_name == "wwf_savetigersnow.org" || page_name == "dont_use_wwf_giftcenter" || page_name == "wwf_giftcenter_rt_nonsecure" || page_name == "dontuse" || page_name == "wwf_mct_onetimegift" || page_name == "wwf_panda.org" || page_name == "wwf_youtube_page_secure" || page_name == "wwf_masterconversiontag_2011" || page_name == "wwf_mct_memorialgift" || page_name == "donotuse" || page_name == "wwf_giftcenter_20130117" || page_name == "wwf_giftcenter_secure" || page_name == "wwf_mct_tributegift" || page_name == "dont_use_wwf_donationlp" || page_name == "wwf_rt_secure"){
+var mt_tags_all = new Array;
+
+// MOJO assigned Site Tracking Tags Array - all tags will be served, regardless of lastvendor cookie or vendor override
+if( page_name == "wwf_rt" ) {
+ mt_tags_all[0] = "<img src='" + protocol + "//p.rfihub.com/ca.gif?rb=2639&ca=20494257&ra=<mpuid/>' height=0 width=0 style='display:none' alt='Rocket Fuel'/>";
+mt_tags_all[1] = "<img src=\"" + protocol + "//wwf.netmng.com/pixel/?aid=1186&tax=hp\" width=\"1\" height=\"1\" border=\"0\" />";
+mt_tags_all[2] = "<scr" + "ipt type=\"text/javascript\">";
+mt_tags_all[2] += "\r\n/* <![CDATA[ */";
+mt_tags_all[2] += "\r\nvar google_conversion_id = 1030858216;";
+mt_tags_all[2] += "\r\nvar google_conversion_language = \"en\";";
+mt_tags_all[2] += "\r\nvar google_conversion_format = \"3\";";
+mt_tags_all[2] += "\r\nvar google_conversion_color = \"666666\";";
+mt_tags_all[2] += "\r\nvar google_conversion_label = \"wGcaCOiHigIQ6MvG6wM\";";
+mt_tags_all[2] += "\r\nvar google_conversion_value = 0;";
+mt_tags_all[2] += "\r\n/* ]]> */";
+mt_tags_all[2] += "\r\n</scr" + "ipt>";
+mt_tags_all[2] += "\r\n<scr" + "ipt type=\"text/javascript\" src=\"" + protocol + "//www.googleadservices.com/pagead/conversion.js\">";
+mt_tags_all[2] += "\r\n</scr" + "ipt>";
+mt_tags_all[2] += "\r\n<noscript>";
+mt_tags_all[2] += "\r\n<div style=\"display:inline;\">";
+mt_tags_all[2] += "\r\n<img height=\"1\" width=\"1\" style=\"border-style:none;\" alt=\"\" src=\"" + protocol + "//www.googleadservices.com/pagead/conversion/1030858216/?label=wGcaCOiHigIQ6MvG6wM&amp;guid=ON&amp;script=0\"/>";
+mt_tags_all[2] += "\r\n</div>";
+mt_tags_all[2] += "\r\n</noscript>";
+mt_tags_all[3] = "<img src=\"" + protocol + "//secure.leadback.advertising.com/adcedge/lb?site=695501&betr=wwflauglb_cs=[+]1[720],3[8760]\" width=\"1\" height=\"1\" border=\"0\">";
+mt_tags_all[4] = "<scr" + "ipt type=\"text/javascript\" src=\"" + protocol + "//s7.addthis.com/js/250/addthis_widget.js#pubid=no-pub-ad&adev=pxid%3D1025%2Cev%3DWFFSite&dnt=1\"></scr" + "ipt>";
+mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Rt=<WWF_RT/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "dont_use_wwf_donationpages" ) {
+ mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Adopt_Giftcenter=<WWF_Adopt_GiftCenter/>&Wwf_Monthlyonetimelandingpages=<WWF_MonthlyOneTimeLandingPages/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "wwf_donationlp_secure" ) {
+ mt_tags_all[0] = "<img src='" + protocol + "//p.rfihub.com/ca.gif?rb=2639&ca=20494259&ra=<mpuid/>' height=0 width=0 style='display:none' alt='Rocket Fuel'/>";
+mt_tags_all[1] = "<img src=\"" + protocol + "//wwf.netmng.com/pixel/?aid=1186&tax=hp\" width=\"1\" height=\"1\" border=\"0\" />";
+mt_tags_all[2] = "<scr" + "ipt type=\"text/javascript\">";
+mt_tags_all[2] += "\r\n/* <![CDATA[ */";
+mt_tags_all[2] += "\r\nvar google_conversion_id = 1030858216;";
+mt_tags_all[2] += "\r\nvar google_conversion_language = \"en\";";
+mt_tags_all[2] += "\r\nvar google_conversion_format = \"3\";";
+mt_tags_all[2] += "\r\nvar google_conversion_color = \"666666\";";
+mt_tags_all[2] += "\r\nvar google_conversion_label = \"wGcaCOiHigIQ6MvG6wM\";";
+mt_tags_all[2] += "\r\nvar google_conversion_value = 0;";
+mt_tags_all[2] += "\r\n/* ]]> */";
+mt_tags_all[2] += "\r\n</scr" + "ipt>";
+mt_tags_all[2] += "\r\n<scr" + "ipt type=\"text/javascript\" src=\"" + protocol + "//www.googleadservices.com/pagead/conversion.js\">";
+mt_tags_all[2] += "\r\n</scr" + "ipt>";
+mt_tags_all[2] += "\r\n<noscript>";
+mt_tags_all[2] += "\r\n<div style=\"display:inline;\">";
+mt_tags_all[2] += "\r\n<img height=\"1\" width=\"1\" style=\"border-style:none;\" alt=\"\" src=\"" + protocol + "//www.googleadservices.com/pagead/conversion/1030858216/?label=wGcaCOiHigIQ6MvG6wM&amp;guid=ON&amp;script=0\"/>";
+mt_tags_all[2] += "\r\n</div>";
+mt_tags_all[2] += "\r\n</noscript>";
+mt_tags_all[3] = "<img src=\"" + protocol + "//secure.leadback.advertising.com/adcedge/lb?site=695501&betr=wwflauglb_cs=[+]1[720],3[8760]\" width=\"1\" height=\"1\" border=\"0\">";
+mt_tags_all[4] = "<scr" + "ipt type=\"text/javascript\" src=\"" + protocol + "//s7.addthis.com/js/250/addthis_widget.js#pubid=no-pub-ad&adev=pxid%3D1027%2Cev%3DWWFDonationInquiries&dnt=1\"></scr" + "ipt>";
+mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Donationlpsecure=<WWF_DonationLPSECURE/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "wwf_panda.org_secure" ) {
+ mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Panda.Org_Secure=<WWF_Panda.org_SECURE/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "wwf_homepagemct" ) {
+ mt_tags_all[0] = "<scr" + "ipt type=\"text/javascript\"> ";
+mt_tags_all[0] += "\r\n_qoptions={qacct:\"p-aeCLVkpryP0PQ\",labels:\"_fp.event.wwf home page\"};";
+mt_tags_all[0] += "\r\n</scr" + "ipt>";
+mt_tags_all[0] += "\r\n<scr" + "ipt type=\"text/javascript\" src=\"" + protocol + "//edge.quantserve.com/quant.js\"></scr" + "ipt>";
+mt_tags_all[0] += "\r\n<noscript>";
+mt_tags_all[0] += "\r\n<img src=\"" + protocol + "//pixel.quantserve.com/pixel/p-aeCLVkpryP0PQ.gif?labels=_fp.event.wwf+home+page\" style=\"display: none;\" border=\"0\" height=\"1\" width=\"1\" alt=\"Quantcast\"/>";
+mt_tags_all[0] += "\r\n</noscript>";
+mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Mct_Homepage=<MCT_Homepage/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "wwf_homepagemct_secure" ) {
+ mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Mct_Homepage_Secure=<MCT_Homepage_SECURE/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "wwf_youtube_page" ) {
+ mt_tags_all[0] = "<img src=\"" + protocol + "//leadback.advertising.com/adcedge/lb?site=695501&betr=wwfauglb_cs=[+]1[720],3[8760]\" width=\"1\" height=\"1\" border=\"0\">";
+mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Youtube_Page=<WWF_YouTube_Page/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "wwf_onetimelp_secure" ) {
+ mt_tags_all[0] = "<img src=\"" + protocol + "//secure.leadback.advertising.com/adcedge/lb?site=695501&betr=wwfvisitonetime_cs=[+]1[720],3[2880]\" width=\"1\" height=\"1\" border=\"0\">";
+mt_tags_all[1] = "<img src=\"" + protocol + "//idcs.interclick.com/Segment.aspx?sid=92f598a8-4353-4a2e-9144-1e43a4ed53a3\"/>";
+mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Onetimelpsecure=<WWF_OneTimeLPSECURE/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "wwf_savetigersnow.org" ) {
+ mt_tags_all[0] = "<img src=\"" + protocol + "//wwf.netmng.com/pixel/?aid=1186&tax=hp\" width=\"1\" height=\"1\" border=\"0\" />";
+mt_tags_all[1] = "<scr" + "ipt type=\"text/javascript\">";
+mt_tags_all[1] += "\r\n/* <![CDATA[ */";
+mt_tags_all[1] += "\r\nvar google_conversion_id = 1030858216;";
+mt_tags_all[1] += "\r\nvar google_conversion_language = \"en\";";
+mt_tags_all[1] += "\r\nvar google_conversion_format = \"3\";";
+mt_tags_all[1] += "\r\nvar google_conversion_color = \"666666\";";
+mt_tags_all[1] += "\r\nvar google_conversion_label = \"wGcaCOiHigIQ6MvG6wM\";";
+mt_tags_all[1] += "\r\nvar google_conversion_value = 0;";
+mt_tags_all[1] += "\r\n/* ]]> */";
+mt_tags_all[1] += "\r\n</scr" + "ipt>";
+mt_tags_all[1] += "\r\n<scr" + "ipt type=\"text/javascript\" src=\"" + protocol + "//www.googleadservices.com/pagead/conversion.js\">";
+mt_tags_all[1] += "\r\n</scr" + "ipt>";
+mt_tags_all[1] += "\r\n<noscript>";
+mt_tags_all[1] += "\r\n<div style=\"display:inline;\">";
+mt_tags_all[1] += "\r\n<img height=\"1\" width=\"1\" style=\"border-style:none;\" alt=\"\" src=\"" + protocol + "//www.googleadservices.com/pagead/conversion/1030858216/?label=wGcaCOiHigIQ6MvG6wM&amp;guid=ON&amp;script=0\"/>";
+mt_tags_all[1] += "\r\n</div>";
+mt_tags_all[1] += "\r\n</noscript>";
+mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Savetigersnow.Org=<WWF_SaveTigersNow.org/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "dont_use_wwf_giftcenter" ) {
+ mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Giftcenter=<WWF_GiftCenter/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "wwf_giftcenter_rt_nonsecure" ) {
+ mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwfgiftcenterrtnonsecure=<WWFGiftCenterRTNonsecure/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "dontuse" ) {
+ mt_tags_all[0] = "<img src=\"" + protocol + "//secure.ace-tag.advertising.com/action/type=599326722/bins=1/rich=0/mnum=1516/site=695501/betr=wwfhybrid_cs=[+]2[336]\" width=\"1\" height=\"1\" border=\"0\">";
+mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Mct_Giftcenterandadopt_Conv=<WWF_MCT_GiftCenterAndAdopt_Conv/>&Wwf_Mct_Giftcenterandadopt_Value=<WWF_MCT_GiftCenterAndAdopt_Value/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "wwf_mct_onetimegift" ) {
+ mt_tags_all[0] = "<img src=\"//pixel.quantserve.com/pixel/p-aeCLVkpryP0PQ.gif?labels=_fp.event.One+time+converter\" style=\"display: none;\" border=\"0\" height=\"1\" width=\"1\" alt=\"Quantcast\"/>";
+mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Mct_Onetimegift=<WWF_MCT_OneTimeGift/>&Wwf_Mct_Onetime_Gift_Donval=<WWF_MCT_OneTime_Gift_DonVal/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "wwf_panda.org" ) {
+ mt_tags_all[0] = "<img src=\"" + protocol + "//wwf.netmng.com/pixel/?aid=1186&tax=hp\" width=\"1\" height=\"1\" border=\"0\" />";
+mt_tags_all[1] = "<scr" + "ipt type=\"text/javascript\">";
+mt_tags_all[1] += "\r\n/* <![CDATA[ */";
+mt_tags_all[1] += "\r\nvar google_conversion_id = 1030858216;";
+mt_tags_all[1] += "\r\nvar google_conversion_language = \"en\";";
+mt_tags_all[1] += "\r\nvar google_conversion_format = \"3\";";
+mt_tags_all[1] += "\r\nvar google_conversion_color = \"666666\";";
+mt_tags_all[1] += "\r\nvar google_conversion_label = \"wGcaCOiHigIQ6MvG6wM\";";
+mt_tags_all[1] += "\r\nvar google_conversion_value = 0;";
+mt_tags_all[1] += "\r\n/* ]]> */";
+mt_tags_all[1] += "\r\n</scr" + "ipt>";
+mt_tags_all[1] += "\r\n<scr" + "ipt type=\"text/javascript\" src=\"" + protocol + "//www.googleadservices.com/pagead/conversion.js\">";
+mt_tags_all[1] += "\r\n</scr" + "ipt>";
+mt_tags_all[1] += "\r\n<noscript>";
+mt_tags_all[1] += "\r\n<div style=\"display:inline;\">";
+mt_tags_all[1] += "\r\n<img height=\"1\" width=\"1\" style=\"border-style:none;\" alt=\"\" src=\"" + protocol + "//www.googleadservices.com/pagead/conversion/1030858216/?label=wGcaCOiHigIQ6MvG6wM&amp;guid=ON&amp;script=0\"/>";
+mt_tags_all[1] += "\r\n</div>";
+mt_tags_all[1] += "\r\n</noscript>";
+mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Panda.Org=<WWF_Panda.org/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "wwf_youtube_page_secure" ) {
+ mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Youtube_Page_Secure=<WWF_YouTube_Page_SECURE/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "wwf_masterconversiontag_2011" ) {
+ mt_tags_all[0] = "<scr" + "ipt type=\"text/javascript\">";
+mt_tags_all[0] += "\r\nvar _pix = document.getElementById(\"_pix_id\");";
+mt_tags_all[0] += "\r\nif (!_pix) {";
+mt_tags_all[0] += "\r\nvar protocol = ((\"https:\" == document.location.protocol) ? \"" + protocol + "//\" : \"" + protocol + "//\");";
+mt_tags_all[0] += "\r\nvar a = Math.random() * 1000000000000000000;";
+mt_tags_all[0] += "\r\n_pix = document.createElement(\"img\");";
+mt_tags_all[0] += "\r\n_pix.setAttribute(\"src\", protocol + \"s.amazon-adsystem.com/iu3?d=forester-did&ex-fargs=%3Fid%3D1a925ef0-9a3d-43ee-a6bf-a235040e5dbd%26type%3D30%26m%3D1&ex-fch=416613\" + \"&cb=\" + a);";
+mt_tags_all[0] += "\r\n_pix.setAttribute(\"id\",\"_pix_id\");";
+mt_tags_all[0] += "\r\ndocument.body.appendChild(_pix);";
+mt_tags_all[0] += "\r\n}";
+mt_tags_all[0] += "\r\n</scr" + "ipt>";
+mt_tags_all[0] += "\r\n<noscript><div style=\"display:inline;\">";
+mt_tags_all[0] += "\r\n<img height=\"1\" width=\"1\" style=\"border-style:none;\" alt=\"\"";
+mt_tags_all[0] += "\r\nsrc=\"" + protocol + "//s.amazon-adsystem.com/iu3?d=forester-did&ex-fargs=%3Fid%3D1a925ef0-9a3d-43ee-a6bf-a235040e5dbd%26type%3D30%26m%3D1&ex-fch=416613\" />";
+mt_tags_all[0] += "\r\n</div></noscript>";
+mt_tags_all[1] = "<scr" + "ipt type=\"text/javascript\"> ";
+mt_tags_all[1] += "\r\n_qoptions={qacct:\"p-aeCLVkpryP0PQ\",labels:\"_fp.event.wwf donors\"};";
+mt_tags_all[1] += "\r\n</scr" + "ipt>";
+mt_tags_all[1] += "\r\n<scr" + "ipt type=\"text/javascript\" src=\"//secure.quantserve.com/quant.js\"></scr" + "ipt>";
+mt_tags_all[1] += "\r\n<noscript>";
+mt_tags_all[1] += "\r\n<img src=\"//secure.quantserve.com/pixel/p-aeCLVkpryP0PQ.gif?labels=_fp.event.wwf+donors\" style=\"display: none;\" border=\"0\" height=\"1\" width=\"1\" alt=\"Quantcast\"/>";
+mt_tags_all[1] += "\r\n</noscript>";
+mt_tags_all[2] = "<scr" + "ipt type=\"text/javascript\">";
+mt_tags_all[2] += "\r\nvar _pix = document.getElementById(\"_pix_id\");";
+mt_tags_all[2] += "\r\nif (!_pix) {";
+mt_tags_all[2] += "\r\nvar protocol = ((\"https:\" == document.location.protocol) ? \"" + protocol + "//\" : \"" + protocol + "//\");";
+mt_tags_all[2] += "\r\nvar a = Math.random() * 1000000000000000000;";
+mt_tags_all[2] += "\r\n_pix = document.createElement(\"img\");";
+mt_tags_all[2] += "\r\n_pix.setAttribute(\"src\", protocol + \"s.amazon-adsystem.com/iu3?d=forester-did&ex-fargs=%3Fid%3D1a925ef0-9a3d-43ee-a6bf-a235040e5dbd%26type%3D30%26m%3D1&ex-fch=416613\" + \"&cb=\" + a);";
+mt_tags_all[2] += "\r\n_pix.setAttribute(\"id\",\"_pix_id\");";
+mt_tags_all[2] += "\r\ndocument.body.appendChild(_pix);";
+mt_tags_all[2] += "\r\n}";
+mt_tags_all[2] += "\r\n</scr" + "ipt>";
+mt_tags_all[2] += "\r\n<noscript><div style=\"display:inline;\">";
+mt_tags_all[2] += "\r\n<img height=\"1\" width=\"1\" style=\"border-style:none;\" alt=\"\"";
+mt_tags_all[2] += "\r\nsrc=\"" + protocol + "//s.amazon-adsystem.com/iu3?d=forester-did&ex-fargs=%3Fid%3D1a925ef0-9a3d-43ee-a6bf-a235040e5dbd%26type%3D30%26m%3D1&ex-fch=416613\" />";
+mt_tags_all[2] += "\r\n</div></noscript>";
+mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Mct_Monthlygift=<WWF_MCT_MonthlyGift/>&Wwf_Mct_Monthly_Gift_Donval=<WWF_MCT_Monthly_Gift_DonVal/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "wwf_mct_memorialgift" ) {
+ mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Mct_Memorialgift=<WWF_MCT_MemorialGift/>&Wwf_Mct_Memorialgift_Value=<WWF_MCT_MemorialGift_Value/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "donotuse" ) {
+ 
+}if( page_name == "wwf_giftcenter_20130117" ) {
+ 
+}if( page_name == "wwf_giftcenter_secure" ) {
+ mt_tags_all[0] = "<img src=\"" + protocol + "//wwf.netmng.com/pixel/?aid=1186&tax=hp\" width=\"1\" height=\"1\" border=\"0\" />";
+mt_tags_all[1] = "<scr" + "ipt type=\"text/javascript\">";
+mt_tags_all[1] += "\r\n/* <![CDATA[ */";
+mt_tags_all[1] += "\r\nvar google_conversion_id = 1030858216;";
+mt_tags_all[1] += "\r\nvar google_conversion_language = \"en\";";
+mt_tags_all[1] += "\r\nvar google_conversion_format = \"3\";";
+mt_tags_all[1] += "\r\nvar google_conversion_color = \"666666\";";
+mt_tags_all[1] += "\r\nvar google_conversion_label = \"wGcaCOiHigIQ6MvG6wM\";";
+mt_tags_all[1] += "\r\nvar google_conversion_value = 0;";
+mt_tags_all[1] += "\r\n/* ]]> */";
+mt_tags_all[1] += "\r\n</scr" + "ipt>";
+mt_tags_all[1] += "\r\n<scr" + "ipt type=\"text/javascript\" src=\"" + protocol + "//www.googleadservices.com/pagead/conversion.js\">";
+mt_tags_all[1] += "\r\n</scr" + "ipt>";
+mt_tags_all[1] += "\r\n<noscript>";
+mt_tags_all[1] += "\r\n<div style=\"display:inline;\">";
+mt_tags_all[1] += "\r\n<img height=\"1\" width=\"1\" style=\"border-style:none;\" alt=\"\" src=\"" + protocol + "//www.googleadservices.com/pagead/conversion/1030858216/?label=wGcaCOiHigIQ6MvG6wM&amp;guid=ON&amp;script=0\"/>";
+mt_tags_all[1] += "\r\n</div>";
+mt_tags_all[1] += "\r\n</noscript>";
+mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Giftcentersecure=<WWF_GiftCenterSECURE/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "wwf_mct_tributegift" ) {
+ mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Mct_Tributegift=<WWF_MCT_TributeGift/>&Wwf_Mct_Tributegift_Value=<WWF_MCT_TributeGift_Value/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "dont_use_wwf_donationlp" ) {
+ mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Donationlp=<WWF_DonationLP/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}if( page_name == "wwf_rt_secure" ) {
+ mt_tags_all.push("<img src=\"" + protocol + "//adfarm.mediaplex.com/ad/bk/17755-123414-3840-0?Wwf_Rt_Secure=<WWF_RT_SECURE/>&mpuid=<mpuid/>\" border=0 height=1 width=1>");
+}
+
+
+
+// Combine all tracking tags into one string
+var mt_tags_str = mt_tags_all.join("\n");
+
+// Replace all parameter macros in the tracking tags string
+for (i=0;i<params.length;i++){
+  pos = params[i].indexOf("=");
+  if (pos == -1){
+    continue;
+  }
+  var name = params[i].substring(0,pos);
+  var value = params[i].substring(pos+1);
+  
+  // Create a regular expression to match all instances of the paramater macro and replace with values from the query string
+  var regex_str = "<" + name + "\\/>";
+  myregexp = new RegExp(regex_str, "gi");
+  
+  mt_tags_str = mt_tags_str.replace(myregexp, value);
+}
+
+
+}
+
+if( mt_tags_str ) {
+// Clean up any macros that may not have been replaced
+mt_tags_str = mt_tags_str.replace(/<[^<>&?=+*#@!%^~;\s'"]+\/>/gi, "");
+
+// Write out all tracking tags
+document.write(mt_tags_str);
+}
+//-->
+</script>
+<title></title>
+</head>
+<body><p></p>
+
+  </body></html>
